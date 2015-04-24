@@ -11,11 +11,7 @@ namespace TileData
         //public static Map instance = null;
         protected Tile [] mapTiles;
 
-        [SerializeField]
-        [Range(1, 100)]
         private int mapWidth = 10;
-        [Range(1, 100)]
-        [SerializeField]
         private int mapLength = 10;
 
         public int MapWidth { get { return mapWidth; } }

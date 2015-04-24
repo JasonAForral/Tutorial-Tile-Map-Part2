@@ -15,7 +15,14 @@ namespace TileGraphics
     {
         public bool mapCentered = true;
 
-        public MapData mapData = new MapData(10, 10);
+
+        public MapData mapData;
+
+        [Range(1, 100)]
+        public int tileCountX = 10;
+        [Range(1, 100)]
+        public int tileCountZ = 10;
+
 
         [Range(0.1f, 10f)]
         public float tileSize = 1f;
@@ -52,8 +59,10 @@ namespace TileGraphics
         {
             Debug.ClearDeveloperConsole();
 
-            vertexCountX = mapData.MapWidth + 1;
-            vertexCountZ = mapData.MapLength + 1;
+            mapData = new MapData(tileCountX, tileCountZ);
+
+            vertexCountX = tileCountX + 1;
+            vertexCountZ = tileCountZ + 1;
 
             vertexCountReciprocal.x = 1f / (float)vertexCountX;
             vertexCountReciprocal.z = 1f / (float)vertexCountZ;
@@ -65,91 +74,15 @@ namespace TileGraphics
 
         }
 
-        Color[][] GetTiles ()
-        {
-            int numTilesPerRow = 1;
-            int numRows = 1;
-
-            float tileImageResolution = 1f / (float)tileResolution;
-
-            numTilesPerRow = Mathf.FloorToInt(terrainTiles.width * tileImageResolution);
-            numRows = Mathf.FloorToInt(terrainTiles.height * tileImageResolution);
-
-            //Debug.Log(numTilesPerRow + ", " + numRows);
-            
-            Color[][] pixels = new Color[4][];
-
-            //pixels[0] = terrainTiles.GetPixels(0, 0, 16, 16);
-            //pixels[1] = terrainTiles.GetPixels(16, 0, 16, 16);
-            //pixels[2] = terrainTiles.GetPixels(32, 0, 16, 16);
-            //pixels[3] = terrainTiles.GetPixels(48, 0, 16, 16);
-
-            for (int z = 0; z < numRows; z++)
-            {
-                for (int x = 0; x < numTilesPerRow; x++)
-                {
-                    int index = z * numTilesPerRow + x;
-                    pixels[index] = terrainTiles.GetPixels(x * tileResolution, z * tileResolution, tileResolution, tileResolution);
-
-                    //Debug.Log("(" + x + ", " + z + ")// pixels[" + z * numTilesPerRow + x + "] = ~~~GetPixels( " + x * tileResolution + ", " + z * tileResolution + ", " + tileResolution + ", " + tileResolution + ")");
-
-
-                }
-            }
-
-
-            return pixels;
-        }
-
-        public void BuildTexture ()
-        {
-
-            int tileResolution = terrainTiles.height;
-
-            int textureWidth = mapData.MapWidth * tileResolution;
-            int textureLength =  mapData.MapLength * tileResolution;
-
-
-            Texture2D texture = new Texture2D(textureWidth, textureLength);
-
-            Color[][] tilePixels = GetTiles();
-
-            for (int z = 0; z < mapData.MapWidth; z++)
-            {
-                for (int x = 0; x < mapData.MapLength; x++)
-                {
-                    int perlinShade = Mathf.Clamp(Mathf.FloorToInt(CustomPerlinNoise(x + 0.5f, z + 0.5f) * 5), 0, 3);
-                    texture.SetPixels(x * tileResolution, z * tileResolution, tileResolution, tileResolution, tilePixels[perlinShade]);
-                }
-            }
-            texture.filterMode = FilterMode.Trilinear;
-            texture.name = "Perlin Noise";
-
-            texture.Apply();
-
-            MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
-
-            meshRenderer.sharedMaterial.mainTexture = texture;
-
-
-        }
-
         public void BuildMesh ()
         {
             mapOffset = Vector3.zero;
-            if (mapCentered)
-            {
-                mapOffset = new Vector3(mapData.MapWidth, 0f, mapData.MapLength) * tileSize * 0.5f;
+            if (mapCentered) { mapOffset = new Vector3(tileCountX, 0f, tileCountZ) * tileSize * 0.5f; }
 
-            }
-
-            //new TileData.MapData(
-
+            int numTiles = tileCountX * tileCountZ;
+            int numTriangles = numTiles * 2;
 
             int numVerts = vertexCountX * vertexCountZ;
-
-            int numTiles = mapData.MapWidth * mapData.MapLength;
-            int numTriangles = numTiles * 2;
 
             // generate Mesh Data
             Vector3[] vertecies = new Vector3[numVerts];
@@ -174,11 +107,11 @@ namespace TileGraphics
                 }
             }
 
-            for (int x = 0; x < mapData.MapWidth; x++)
+            for (int x = 0; x < tileCountX; x++)
             {
-                for (int z = 0; z < mapData.MapLength; z++)
+                for (int z = 0; z < tileCountZ; z++)
                 {
-                    int tileCoordIndex = 6 * (z + x * mapData.MapLength);
+                    int tileCoordIndex = 6 * (z + x * tileCountZ);
                     int vertexCoord = (z + x * vertexCountZ);
 
                     triangles[tileCoordIndex + 0] = vertexCoord + 0;
@@ -220,9 +153,77 @@ namespace TileGraphics
             meshFilter.sharedMesh = mesh;
             meshCollider.sharedMesh = mesh;
 
+        }
+
+        public void BuildTexture ()
+        {
+
+            int tileResolution = terrainTiles.height;
+
+            int textureWidth = tileCountX * tileResolution;
+            int textureLength =  tileCountZ * tileResolution;
+
+
+            Texture2D texture = new Texture2D(textureWidth, textureLength);
+
+            Color[][] tilePixels = GetTiles();
+
+            for (int z = 0; z < tileCountX; z++)
+            {
+                for (int x = 0; x < tileCountZ; x++)
+                {
+                    int perlinShade = Mathf.Clamp(Mathf.FloorToInt(CustomPerlinNoise(x + 0.5f, z + 0.5f) * 5), 0, 3);
+                    texture.SetPixels(x * tileResolution, z * tileResolution, tileResolution, tileResolution, tilePixels[perlinShade]);
+                }
+            }
+            texture.filterMode = FilterMode.Trilinear;
+            texture.name = "Perlin Noise";
+
+            texture.Apply();
+
+            MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
+
+            meshRenderer.sharedMaterial.mainTexture = texture;
+
 
         }
 
+        Color[][] GetTiles ()
+        {
+            int numTilesPerRow = 1;
+            int numRows = 1;
+
+            float tileImageResolution = 1f / (float)tileResolution;
+
+            numTilesPerRow = Mathf.FloorToInt(terrainTiles.width * tileImageResolution);
+            numRows = Mathf.FloorToInt(terrainTiles.height * tileImageResolution);
+
+            //Debug.Log(numTilesPerRow + ", " + numRows);
+
+            Color[][] pixels = new Color[4][];
+
+            //pixels[0] = terrainTiles.GetPixels(0, 0, 16, 16);
+            //pixels[1] = terrainTiles.GetPixels(16, 0, 16, 16);
+            //pixels[2] = terrainTiles.GetPixels(32, 0, 16, 16);
+            //pixels[3] = terrainTiles.GetPixels(48, 0, 16, 16);
+
+            for (int z = 0; z < numRows; z++)
+            {
+                for (int x = 0; x < numTilesPerRow; x++)
+                {
+                    int index = z * numTilesPerRow + x;
+                    pixels[index] = terrainTiles.GetPixels(x * tileResolution, z * tileResolution, tileResolution, tileResolution);
+
+                    //Debug.Log("(" + x + ", " + z + ")// pixels[" + z * numTilesPerRow + x + "] = ~~~GetPixels( " + x * tileResolution + ", " + z * tileResolution + ", " + tileResolution + ", " + tileResolution + ")");
+
+
+                }
+            }
+
+
+            return pixels;
+        }
+        
         void MapSetup ()
         {
             //mapHolder = new GameObject("Map").transform;
