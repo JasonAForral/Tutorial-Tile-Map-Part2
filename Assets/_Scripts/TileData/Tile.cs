@@ -8,19 +8,13 @@ namespace TileData
     [Serializable]
     public class Tile
     {
-        Vector3 _position;
+        //Vector3 _position;
+        public int tileType;
 
-        public enum Types
+        public Tile (int type = 0)
         {
-            Ocean = 0,
-            Sand,
-            Grass,
-            Mountain
-        };
-
-        public Tile ()
-        {
+            tileType = type;
         }
-
+        
     }
 }

@@ -14,34 +14,24 @@ namespace TileGraphics
     public class MapGraphics : MonoBehaviour
     {
         public bool mapCentered = true;
+        private MapData mapData;
 
-
-        public MapData mapData;
-
-        [Range(1, 100)]
         public int tileCountX = 10;
-        [Range(1, 100)]
         public int tileCountZ = 10;
 
-
-        [Range(0.1f, 10f)]
         public float tileSize = 1f;
-        [Range(0.1f, 10f)]
         public float randomHeight = 1f;
-
         public float perlinScale = 3f;
 
         private Vector3 mapOffset;
-        
-        int vertexCountX;
-        int vertexCountZ;
+        private int vertexCountX;
+        private int vertexCountZ;
 
         //private Transform mapHolder;
 
         Vector3 tileCountReciprocal;
         Vector3 vertexCountReciprocal;
-        Vector3 perlinOrg;
-
+        
         public Texture2D terrainTiles;
         public int tileResolution = 16;
 
@@ -59,16 +49,13 @@ namespace TileGraphics
         {
             Debug.ClearDeveloperConsole();
 
-            mapData = new MapData(tileCountX, tileCountZ);
+            mapData = new MapData(tileCountX, tileCountZ, perlinScale);
 
             vertexCountX = tileCountX + 1;
             vertexCountZ = tileCountZ + 1;
 
             vertexCountReciprocal.x = 1f / (float)vertexCountX;
             vertexCountReciprocal.z = 1f / (float)vertexCountZ;
-
-            perlinOrg.x = Random.Range(0f, 100f);
-            perlinOrg.z = Random.Range(0f, 100f);
 
             //terrainTiles.
 
@@ -97,7 +84,7 @@ namespace TileGraphics
 
                     int vertexCountIndex = z + x * vertexCountZ;
                     //Debug.Log(vertexCountIndex);
-                    vertecies[vertexCountIndex] = new Vector3(x, (CustomPerlinNoise(x, z) - 0.5f) * randomHeight, z) * tileSize - mapOffset;
+                    vertecies[vertexCountIndex] = new Vector3(x, (mapData.CustomPerlinNoise(x, z) - 0.5f) * randomHeight, z) * tileSize - mapOffset;
                     normals[vertexCountIndex] = Vector3.up;
                     uv[vertexCountIndex] = new Vector2(x * mapData.MapDimensionsReciprocal.x, z * mapData.MapDimensionsReciprocal.z);
 
@@ -159,10 +146,8 @@ namespace TileGraphics
         {
 
             int tileResolution = terrainTiles.height;
-
             int textureWidth = tileCountX * tileResolution;
             int textureLength =  tileCountZ * tileResolution;
-
 
             Texture2D texture = new Texture2D(textureWidth, textureLength);
 
@@ -172,8 +157,9 @@ namespace TileGraphics
             {
                 for (int x = 0; x < tileCountZ; x++)
                 {
-                    int perlinShade = Mathf.Clamp(Mathf.FloorToInt(CustomPerlinNoise(x + 0.5f, z + 0.5f) * 5), 0, 3);
-                    texture.SetPixels(x * tileResolution, z * tileResolution, tileResolution, tileResolution, tilePixels[perlinShade]);
+                    //int perlinShade = Mathf.Clamp(Mathf.FloorToInt(CustomPerlinNoise(x + 0.5f, z + 0.5f) * 5), 0, 3);
+                    //texture.SetPixels(x * tileResolution, z * tileResolution, tileResolution, tileResolution, tilePixels[perlinShade]);
+                    texture.SetPixels(x * tileResolution, z * tileResolution, tileResolution, tileResolution, tilePixels[mapData.GetTileAt(x, z).tileType]);
                 }
             }
             texture.filterMode = FilterMode.Trilinear;
@@ -232,10 +218,11 @@ namespace TileGraphics
         }
 
 
-        float CustomPerlinNoise (float x, float y)
-        {
-            return Mathf.PerlinNoise((x + perlinOrg.x) * vertexCountReciprocal.z * perlinScale, (y + perlinOrg.z) * vertexCountReciprocal.z * perlinScale);
-        }
+        //float CustomPerlinNoise (float x, float y)
+        //{
+            
+        //    return Mathf.PerlinNoise((x + perlinOrg.x) * vertexCountReciprocal.x * perlinScale, (y + perlinOrg.z) * vertexCountReciprocal.z * perlinScale);
+        //}
     }
 
 }
