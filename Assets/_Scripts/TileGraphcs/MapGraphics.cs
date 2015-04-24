@@ -50,7 +50,8 @@ namespace TileGraphics
 
         public void Initialize ()
         {
-            
+            Debug.ClearDeveloperConsole();
+
             vertexCountX = mapData.MapWidth + 1;
             vertexCountZ = mapData.MapLength + 1;
 

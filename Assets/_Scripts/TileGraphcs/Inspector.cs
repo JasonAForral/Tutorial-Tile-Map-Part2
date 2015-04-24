@@ -1,10 +1,10 @@
 ﻿using UnityEditor;
 using UnityEngine;
 using System.Collections;
+
 /*
 namespace TileGraphics
 {
-
     [CustomEditor(typeof(MapGraphics))]
     public class TileMapEditor : Editor
     {
